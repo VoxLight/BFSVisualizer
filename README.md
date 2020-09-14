@@ -19,6 +19,14 @@ Images MUST have an aspect ratio of 1:1 or there will be stretching! You can cre
 
 Examples can be found in the `mazes` directory.
 
+## Installation
+
+This is a CLI. Clone/download the repo and move to the directory inside of your terminal.
+
+```
+py -m pip install requirements.txt
+```
+
 
 ## Usage
 
