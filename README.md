@@ -1,4 +1,5 @@
 # Search
+![Gif of a path being generated, slowly finding its way to several coins, and then final an end node](https://github.com/VoxLight/Search/blob/master/gifs/coins.gif?raw=true)
 
 ## About
 This is a tool used to visualize the process of BFS path finding.
