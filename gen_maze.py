@@ -5,13 +5,9 @@ from PIL import Image, ImageDraw
 
 # locals
 import math
-import pygame
 import argparse
-from random import  shuffle, randrange, choice, seed
+from random import shuffle, randrange, choice, seed
 seed(randrange(100000000))
-
-# relatives
-from BFSVisualizer import COLORS, DIRECTIONS, SYMBOLS, _add_vect_2D
 
 PRIM_DIRECTIONS = {
     "UP": (0, -2),
@@ -20,78 +16,76 @@ PRIM_DIRECTIONS = {
     "RIGHT": (2, 0)
 }
 
-def grid_maze(size):
-    width, height = size
-    walls = list(set([
-        (x, y) for y in range(0, height, 2) for x in range(width) # every other row
-    ] + [
-        (x, y) for y in range(height) for x in range(0, width, 2) # every other column
-    ]
-    
-    ))
-    
-    cells = [
-        (x, y) for x in range(width) for y in range(height) if (x, y) not in walls
-    ]
-    
-    walls = [wall for wall in walls if _good_node(wall, (width, height))]
-    
-    temp = Image.new('RGB', (width, height), SYMBOLS["OPEN"])
-    
-    draw = ImageDraw.Draw(temp)
-    
-    for wall in walls:
-        draw.point(wall, SYMBOLS["CLOSE"])
-    
-    return temp, walls, cells
+COLORS = {
+    "WHITE":(255, 255, 255),
+    "BLACK":(0, 0, 0),
+    "RED":(255,0,0),
+    "GREEN":(0,255,0),
+    "BLUE":(0,0,255),
+    "YELLOW":(255,255,0)
+}
 
-def filled_maze(size):
-    return Image.new('RGB', size, SYMBOLS["CLOSE"])
+SYMBOLS = {
+    "OPEN": COLORS["BLACK"],
+    "CLOSE": COLORS["RED"],
+    "END": COLORS["GREEN"],
+    "START": COLORS["BLUE"],
+    "COIN": COLORS["YELLOW"]
+}
+
+DIRECTIONS = {
+    "UP": (0, -1),
+    "DOWN": (0, 1),
+    "LEFT": (-1, 0),
+    "RIGHT": (1, 0)
+}
 
 def empty_maze(size):
     return Image.new('RGB', size, SYMBOLS["OPEN"])
     
-def prim(img):
-    # empty maze
-    pygame.init()
+# def prim(img):
+#     empty maze
+#     pygame.init()
     
-    screen = pygame.display.set_mode(img.size)
+#     screen = pygame.display.set_mode(img.size)
     
-    w, h = img.size
-    w, h = w-1, h-1
-    draw = ImageDraw.Draw(img)
-    
-    
-    start = (randrange(1, w), randrange(1, h))
-    
-    draw.point(start, SYMBOLS["START"])
-    
-    maze = [start]
-    
-    frontier = _cell_neighbors(start)
+#     w, h = img.size
+#     w, h = w-1, h-1
+#     draw = ImageDraw.Draw(img)
     
     
+#     start = (randrange(1, w), randrange(1, h))
     
-    while frontier:
-        node = frontier.pop( frontier.index( choice(frontier) ) ) 
-        maze.append(node)
+#     draw.point(start, SYMBOLS["START"])
+    
+#     maze = [start]
+    
+#     frontier = _cell_neighbors(start)
+    
+    
+    
+#     while frontier:
+#         node = frontier.pop( frontier.index( choice(frontier) ) ) 
+#         maze.append(node)
         
-        for neighbor in _cell_neighbors(node):
-            if not _good_node(neighbor, img.size): continue
-            if neighbor in frontier: continue
-            if _exits(neighbor, img) >= 1: continue
-            if neighbor in maze:
-                draw.line(node+neighbor, SYMBOLS["CLOSE"], 1)
-                gimg = pygame.image.frombuffer(img.tobytes(), img.size, "RGB")
-                screen.blit(gimg, (0, 0))
-                pygame.display.update()
+#         for neighbor in _cell_neighbors(node):
+#             if not _good_node(neighbor, img.size): continue
+#             if neighbor in frontier: continue
+#             if _exits(neighbor, img) >= 1: continue
+#             if neighbor in maze:
+#                 for event in pygame.event.get():
+#                     if event == pygame.QUIT: exit()
+#                 draw.line(node+neighbor, SYMBOLS["CLOSE"], 1)
+#                 gimg = pygame.image.frombuffer(img.tobytes(), img.size, "RGB")
+#                 screen.blit(gimg, (0, 0))
+#                 pygame.display.update()
             
-            frontier.append(neighbor)
+#             frontier.append(neighbor)
             
         
             
-    draw.point(maze[-1], SYMBOLS["END"])
-    draw.point(start, SYMBOLS["START"])
+#     draw.point(maze[-1], SYMBOLS["END"])
+#     draw.point(start, SYMBOLS["START"])
     
 def prim_no_vis(img):
     # empty maze  
@@ -113,6 +107,7 @@ def prim_no_vis(img):
     while frontier:
         node = frontier.pop( frontier.index( choice(frontier) ) ) 
         maze.append(node)
+        
         
         for neighbor in _cell_neighbors(node):
             if not _good_node(neighbor, img.size): continue
@@ -147,13 +142,25 @@ def _establish_cli():
     )
     
     parser.add_argument(
-        '-height', type=int, nargs='?', default=height, dest="height",
+        '-eight', type=int, nargs='?', default=height, dest="height",
         help="height of the resulting maze. (defaults to 10)"
     )
     
     # get the args
     return parser.parse_args()
 
+def _add_vect_2D(vect1, vect2):
+    """Adds two indexible reprs. of 2D vects
+
+    Args:
+        vect1 (tuple): Tuple of ints Y & X.
+        vect2 (tuple): Tuple of ints Y & X.
+
+    Returns:
+        tuple: vect1 offset by vect2
+    """
+    return (vect1[0]+vect2[0], vect1[1]+vect2[1])
+    
 def _neighbors(pos):
     return [ _add_vect_2D(pos, dir_ ) for dir_ in list(DIRECTIONS.values())]
 
@@ -170,12 +177,12 @@ def _exits(node, image):
     return exits
 
 def _good_node(pos, size):
-    h, w = size
+    w, h = size
     x, y = pos
     return  not ((x < 0) or
         (y < 0) or
-        (x > w) or
-        (y > h))
+        (x > w-1) or
+        (y > h-1))
 
 def __main():
     args = _establish_cli()
