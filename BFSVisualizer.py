@@ -25,6 +25,23 @@ def _get_dims(matrix):
     # x , y
     return len(matrix[0]), len(matrix)
 
+def _img_to_matrix(fp):
+    """Takes in a filepath of a png image and returns a 2D matrix of RGB color values.
+
+    Args:
+        fp (str): path to the image
+
+    Returns:
+        list: 2D array of RGB tuples
+    """
+    img = Image.open(fp)
+    
+    # create a 2d matrix of (R, G, B) values from the image.
+    return [
+        [img.getpixel((x, y))[:3] for y in range(img.height) 
+            ] for x in range(img.width)
+    ]
+            
 
 def _establish_cli():
     """Establishes the cli for this program
