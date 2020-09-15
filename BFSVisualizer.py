@@ -14,7 +14,6 @@ import shutil
 import pygame
 import argparse
 from PIL import Image
-from PIL.ImagePalette import ImagePalette as Palette
 
 """
 Exit Codes used from: https://tldp.org/LDP/abs/html/exitcodes.html
