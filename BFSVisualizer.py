@@ -20,6 +20,7 @@ name to an already decalred object or keyword.
 
 # privates
 _scrnsht = lambda: None
+_frame = lambda: None
 
 def _get_dims(matrix):
     # x , y
@@ -71,6 +72,11 @@ def _establish_cli():
     )
     
     parser.add_argument(
+        '-gif', type=int, nargs=1, default=None, dest="gif",
+        help="filepath to save frames in a subdir and then compile them into a gif."
+    )
+    
+    parser.add_argument(
         'maze_fp', type=str, nargs=1, default=None,
         help="filepath of the maze to generate a path for."
     )
@@ -106,6 +112,9 @@ def __main():
         
     if args.scr:
         _scrnsht = lambda surface: pygame.image.save(surface, args.scr)
+        
+    if args.gif:
+        _frame = lambda surface: pygame.image.save(surface, args.gif)
     
     # consts
     MAZE_FP = args.maze_fp
