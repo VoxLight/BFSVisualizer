@@ -5,19 +5,39 @@ from PIL import Image, ImageDraw
 
 # locals
 import math
-import pygame
 import argparse
 from random import  shuffle, randrange, choice, seed
 seed(randrange(100000000))
-
-# relatives
-from BFSVisualizer import COLORS, DIRECTIONS, SYMBOLS, _add_vect_2D
 
 PRIM_DIRECTIONS = {
     "UP": (0, -2),
     "DOWN": (0, 2),
     "LEFT": (-2, 0),
     "RIGHT": (2, 0)
+}
+
+COLORS = {
+    "WHITE":(255, 255, 255),
+    "BLACK":(0, 0, 0),
+    "RED":(255,0,0),
+    "GREEN":(0,255,0),
+    "BLUE":(0,0,255),
+    "YELLOW":(255,255,0)
+}
+
+SYMBOLS = {
+    "OPEN": COLORS["BLACK"],
+    "CLOSE": COLORS["RED"],
+    "END": COLORS["GREEN"],
+    "START": COLORS["BLUE"],
+    "COIN": COLORS["YELLOW"]
+}
+
+DIRECTIONS = {
+    "UP": (0, -1),
+    "DOWN": (0, 1),
+    "LEFT": (-1, 0),
+    "RIGHT": (1, 0)
 }
 
 def grid_maze(size):
@@ -50,7 +70,8 @@ def filled_maze(size):
 
 def empty_maze(size):
     return Image.new('RGB', size, SYMBOLS["OPEN"])
-    
+
+"""
 def prim(img):
     # empty maze
     pygame.init()
@@ -92,6 +113,7 @@ def prim(img):
             
     draw.point(maze[-1], SYMBOLS["END"])
     draw.point(start, SYMBOLS["START"])
+"""
     
 def prim_no_vis(img):
     # empty maze  
@@ -147,12 +169,24 @@ def _establish_cli():
     )
     
     parser.add_argument(
-        '-height', type=int, nargs='?', default=height, dest="height",
+        '-eight', type=int, nargs='?', default=height, dest="height",
         help="height of the resulting maze. (defaults to 10)"
     )
     
     # get the args
     return parser.parse_args()
+
+def _add_vect_2D(vect1, vect2):
+    """Adds two indexible reprs. of 2D vects
+
+    Args:
+        vect1 (tuple): Tuple of ints Y & X.
+        vect2 (tuple): Tuple of ints Y & X.
+
+    Returns:
+        tuple: vect1 offset by vect2
+    """
+    return (vect1[0]+vect2[0], vect1[1]+vect2[1])
 
 def _neighbors(pos):
     return [ _add_vect_2D(pos, dir_ ) for dir_ in list(DIRECTIONS.values())]
