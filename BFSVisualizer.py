@@ -1,7 +1,7 @@
 # built-ins
 import argparse
 import pygame
-import PIL
+from PIL import Image
 
 """
 Exit Codes used from: https://tldp.org/LDP/abs/html/exitcodes.html
@@ -21,10 +21,7 @@ name to an already decalred object or keyword.
 # privates
 _scrnsht = lambda: None
 
-def _img_to_matrix(fp):
-    pass
-
-def _get_size(matrix):
+def _get_dims(matrix):
     # x , y
     return len(matrix[0]), len(matrix)
 
@@ -96,7 +93,7 @@ def __main():
     # consts
     MAZE_FP = args.maze_fp
     MATRIX = _img_to_matrix(MAZE_FP)
-    MAZE_W, MAZE_H = _get_size(MATRIX)
+    MAZE_W, MAZE_H = _get_dims(MATRIX)
     FPS = args.fps
 
     RES = WIDTH, HEIGHT = args.size, args.size
