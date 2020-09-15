@@ -1,6 +1,6 @@
 # Search
-![Gif of a path being generated, slowly finding its way to several coins, and then finally an end node](https://github.com/VoxLight/Search/blob/master/gifs/coins.gif?raw=true)
-![Image of the completed shortest path](https://github.com/VoxLight/Search/blob/master/screenshots/coins.png?raw=true)
+![Gif of a path being generated, slowly finding its way to several coins, and then finally an end node](https://github.com/VoxLight/BFSVisualizer/blob/master/gifs/rotate.gif?raw=true)
+![Image of the completed shortest path](https://github.com/VoxLight/BFSVisualizer/blob/master/screenshots/rotate.png?raw=true)
 
 ## About
 This is a tool used to visualize the process of BFS path finding.
@@ -32,6 +32,26 @@ py -m pip install requirements.txt
 
 ## Usage
 
+for help
+```
+py BFSVisualizer.py -h
+>>>>usage: BFSVisualizer.py [-h] [-fps [FPS]] [-size [SIZE]] [-scr [SCR]] [-gif [GIF]] [maze_fp]
+
+Get the maze file path, configs, and flags.
+
+positional arguments:
+  maze_fp       filepath of the maze to generate a path for.
+
+optional arguments:
+  -h, --help    show this help message and exit
+  -fps [FPS]    framerate of the loop. (defaul is 60)
+  -size [SIZE]  height of the pygame surface (aspect ration 1:1). (defaul is 800)
+  -scr [SCR]    filepath to save a screenshot of the completed path. will not save if not provided.
+  -gif [GIF]    filepath to save frames in a subdir and then compile them into a gif.
+
+
+```
+
 ```
 py BFSVisualizer.py -fps 60 -size 1000 "./mazes/small.png"
 ```
@@ -39,3 +59,16 @@ py BFSVisualizer.py -fps 60 -size 1000 "./mazes/small.png"
 `fps` is the allowed speed of the main loop.
 `size` is the resolution of the pygame surface ( sizexsize ). An aspect ration of 1:1 is required.
 The filepath is the path to your maze image.
+
+Here is the command I used to generate the media above.
+
+gifs/rotate.gif
+```
+py BFSVisualizer.py "./mazes/rotate.png" -fps 27.4 -gif "./gifs/rotate"
+```
+
+and screenshots/rotate.png
+
+```
+py BFSVisualizer.py "./mazes/rotate.png" -fps 27.4 -scr "./screenshots/rotate.png"
+```
