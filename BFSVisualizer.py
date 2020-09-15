@@ -125,8 +125,7 @@ def _scale_position(node, small_dim, big_dim):
     )
     
 def _make_rects(matrix, nodes, dims, color):
-    size, maze_res, res = dims
-    
+    size, maze_res, res = dims 
     return [(pygame.Rect(
             _scale_position(node, maze_res, res),
             size
@@ -143,7 +142,6 @@ def _draw(surface, packed, matrix2D, save_frame_):
     RECT_SIZE = round(WIDTH/MAZE_W)+1, round(HEIGHT/MAZE_H)+1
     
     DIMS = RECT_SIZE,MAZE_RES,RES
-    
     path, start, end, closed, goals = packed
     
     to_draw = _make_rects(matrix2D, path, DIMS, COLORS["WHITE"]) +\
