@@ -324,7 +324,7 @@ def __main():
         if goals:
             if node in goals: 
                 found_goals.append( goals.pop( goals.index(node)))
-                visited = []
+                visited = [node]
                 queue = [path]
         elif node == end:
             if args.scr:
