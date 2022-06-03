@@ -28,6 +28,20 @@ Two underscores are akin to an object not used by my own code.
 similarly, an underscore at the end is used to represent an object that wants a similar
 name to an already decalred object or keyword.
 """
+class Interactive:
+    scale = 10
+    offset_position = (0, 0)
+    base_position = (0, 0)
+    tracking = False
+    @classmethod
+    def growScale(cls, val):
+        cls.scale += val/cls.scale
+    @classmethod
+    def setOffset(cls):
+        offset_position = _add_vect_2D(pygame.mouse.get_pos(), _negate_vect_2D(cls.base_position))
+
+
+
 
 
 # privates
@@ -49,6 +63,17 @@ def _add_vect_2D(vect1, vect2):
         tuple: vect1 offset by vect2
     """
     return (vect1[0]+vect2[0], vect1[1]+vect2[1])
+
+def _negate_vect_2D(vect):
+    """Negates a 2D vect
+
+    Args:
+        vect (tuple): Tuple of ints Y & X.
+
+    Returns:
+        tuple: -vect
+    """
+    return (-vect[0], -vect[1])
     
 def _depack_image_data(matrix):
     w, h = _get_dims(matrix)
@@ -84,6 +109,7 @@ def _establish_cli():
     # Defaults
     fps = 60
     size = 800
+    
     
     # Establish the cli 
     parser = argparse.ArgumentParser(description="Get the maze file path, configs, and flags.")
@@ -124,31 +150,64 @@ def _scale_position(node, small_dim, big_dim):
         _map(node[1], 0, small_dim[1], 0, big_dim[1])
     )
     
-def _make_rects(matrix, nodes, dims, color):
-    size, maze_res, res = dims 
-    return [(pygame.Rect(
-            _scale_position(node, maze_res, res),
+def _make_rects(nodes, dims, color, offsets):
+
+    size, maze_res, res = dims
+    output = []
+    for node in nodes:
+        scaled_node = _scale_position(node, maze_res, res)
+        node_offset = (scaled_node[0] + offsets[0], scaled_node[1] + offsets[1])
+
+        rect = (pygame.Rect(
+            node_offset,
             size
-        ), color) for node in nodes]
-    
+        ), color)
+        output.append(rect)
+    return output
+   
 def _handle_events():
     for event in pygame.event.get():
-        if event == pygame.QUIT: sys.exit(0)
+        print(event)
+        if event.type == pygame.QUIT: sys.exit(0)
+        if event.type == pygame.MOUSEWHEEL:
+                Interactive.growScale(event.y)
+                print("Scale Increased!")
+        if event.type == pygame.MOUSEMOTION:
+            if pygame.mouse.get_rel()[0]:
+                Interactive.tracking = False
+            elif pygame.mouse.get_pressed()[0]:
+                if not Interactive.tracking:
+                    Interactive.base_position = pygame.mouse.get_pos()
+                Interactive.tracking = True
+                Interactive.setOffset()
 
-def _draw(surface, packed, matrix2D, save_frame_):
+                
+
+
+def _draw(surface, packed, matrix2D, save_frame_, reset_pos=False):
+
     RES = WIDTH, HEIGHT = surface.get_size()
     MAZE_RES = MAZE_W, MAZE_H = _get_dims(matrix2D)
     
-    RECT_SIZE = round(WIDTH/MAZE_W)+1, round(HEIGHT/MAZE_H)+1
-    
-    DIMS = RECT_SIZE,MAZE_RES,RES
+
+    if not reset_pos:
+        RECT_SIZE = (1*Interactive.scale, 1*Interactive.scale)#((WIDTH/MAZE_W)+1), (HEIGHT/MAZE_H)+1
+        SCALED_RES = MAZE_RES[0]*Interactive.scale, MAZE_RES[1]*Interactive.scale
+        DIMS = RECT_SIZE,MAZE_RES,SCALED_RES#SCALED_RES#RES
+        offsets = WIDTH/2 - Interactive.offset_position[0], HEIGHT/2 - Interactive.offset_position[1]
+    else:
+        RECT_SIZE = (WIDTH/MAZE_W)+1, (HEIGHT/MAZE_H)+1
+        DIMS = RECT_SIZE,MAZE_RES,RES#SCALED_RES#RES
+        offsets = 0, 0
+
     path, start, end, closed, goals = packed
+
     
-    to_draw = _make_rects(matrix2D, path, DIMS, COLORS["WHITE"]) +\
-            _make_rects(matrix2D, [start], DIMS, COLORS["BLUE"]) +\
-            _make_rects(matrix2D, [end], DIMS, COLORS["GREEN"]) +\
-            _make_rects(matrix2D, closed, DIMS, COLORS["RED"]) +\
-            _make_rects(matrix2D, goals, DIMS, COLORS["YELLOW"]) 
+    to_draw = _make_rects(path, DIMS, COLORS["WHITE"], offsets) +\
+            _make_rects([start], DIMS, COLORS["BLUE"], offsets) +\
+            _make_rects([end], DIMS, COLORS["GREEN"], offsets) +\
+            _make_rects(closed, DIMS, COLORS["RED"], offsets) +\
+            _make_rects(goals, DIMS, COLORS["YELLOW"], offsets) 
     
     surface.fill(COLORS["BLACK"])
     
@@ -161,7 +220,7 @@ def _draw(surface, packed, matrix2D, save_frame_):
         _save_frame(surface, save_frame_)
     
     _handle_events()
-
+    
 def _scrnsht(surface, fp):
     pygame.image.save(surface, fp)
     
@@ -174,12 +233,14 @@ def _make_gif(fp, fps):
     fp_in = fp
     name = fp_in+"/"+fp_in.split("/")[-1]+"*.png"
     fp_out = fp_in+".gif"
-
+    print("Generating Gif")
     # https://pillow.readthedocs.io/en/stable/handbook/image-file-formats.html#gif
     img, *imgs = [Image.open(f) for f in sorted(glob.glob(name), key=lambda x: int("".join(re.findall("[0-9]", x))))]
+    print("Saving Gif")
     img.save(fp=fp_out, format='GIF', append_images=imgs,
             save_all=True, fps=fps, duration=(1/fps), loop=0, optimize=True, palettesize=len(list(COLORS.values())), subrectangles=True)
-
+    
+    print("Cleaning up.")
     shutil.rmtree(fp_in)
 
 # publics
@@ -278,9 +339,6 @@ def is_solvable(matrix):
 
     return False
 
-
-
-
 # secrets
 
 def __main():
@@ -319,7 +377,7 @@ def __main():
         
         
         
-        _draw(SCREEN, packed, MATRIX, saveframe)
+        _draw(SCREEN, packed, MATRIX, saveframe, reset_pos=False)
         
         if goals:
             if node in goals: 
@@ -328,6 +386,7 @@ def __main():
                 queue = [path]
         elif node == end:
             if args.scr:
+                _draw(SCREEN, packed, MATRIX, saveframe, reset_pos=True)
                 _scrnsht(SCREEN, args.scr)
             if args.gif:
                 _make_gif(saveframe, FPS)
@@ -343,10 +402,6 @@ def __main():
             visited.append(neighbor)
             
         time.sleep(1/FPS)
-    
-
-    
-    
-
+       
 if __name__ == "__main__":
     __main()
