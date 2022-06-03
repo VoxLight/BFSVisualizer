@@ -26,7 +26,7 @@ Examples can be found in the `mazes` directory.
 This is a CLI. Clone/download the repo and move to the directory inside of your terminal.
 
 ```
-py -m pip install requirements.txt
+py -m pip install -r requirements.txt
 ```
 
 
