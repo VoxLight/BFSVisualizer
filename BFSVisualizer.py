@@ -10,6 +10,7 @@ import os
 import sys
 import glob
 import time
+import math
 import shutil
 import pygame
 import argparse
@@ -31,14 +32,23 @@ name to an already decalred object or keyword.
 class Interactive:
     scale = 10
     offset_position = (0, 0)
-    base_position = (0, 0)
+    start_tracking_pos = (0, 0)
     tracking = False
     @classmethod
     def growScale(cls, val):
-        cls.scale += val/cls.scale
+        cls.scale += val*cls.scale*0.1
+
     @classmethod
     def setOffset(cls):
-        offset_position = _add_vect_2D(pygame.mouse.get_pos(), _negate_vect_2D(cls.base_position))
+        print("Offset Position: ", cls.offset_position)
+        print("Start Pos: ", cls.start_tracking_pos)
+        print()
+        cls.offset_position = _add_vect_2D(_negate_vect_2D(pygame.mouse.get_pos()),  cls.start_tracking_pos)
+
+    @classmethod
+    def startTrackingPosition(cls):
+        cls.start_tracking_pos = _add_vect_2D(pygame.mouse.get_pos(), cls.offset_position)
+
 
 
 
@@ -167,40 +177,54 @@ def _make_rects(nodes, dims, color, offsets):
    
 def _handle_events():
     for event in pygame.event.get():
-        print(event)
+        # print(event)
         if event.type == pygame.QUIT: sys.exit(0)
         if event.type == pygame.MOUSEWHEEL:
                 Interactive.growScale(event.y)
                 print("Scale Increased!")
+
         if event.type == pygame.MOUSEMOTION:
-            if pygame.mouse.get_rel()[0]:
-                Interactive.tracking = False
-            elif pygame.mouse.get_pressed()[0]:
-                if not Interactive.tracking:
-                    Interactive.base_position = pygame.mouse.get_pos()
+            if pygame.mouse.get_pressed()[0]:
+                # if not Interactive.tracking:
+                    
                 Interactive.tracking = True
+                # print("Dragging")
                 Interactive.setOffset()
+
+            elif pygame.mouse.get_rel()[0]:
+                Interactive.tracking = False
+                # print("Released")
+                Interactive.startTrackingPosition()
 
                 
 
 
-def _draw(surface, packed, matrix2D, save_frame_, reset_pos=False):
+def _draw(surface, packed, matrix2D, save_frame_, reset_pos=False, follow=False):
 
     RES = WIDTH, HEIGHT = surface.get_size()
     MAZE_RES = MAZE_W, MAZE_H = _get_dims(matrix2D)
     
+    path, start, end, closed, goals = packed
 
-    if not reset_pos:
+    if follow:
         RECT_SIZE = (1*Interactive.scale, 1*Interactive.scale)#((WIDTH/MAZE_W)+1), (HEIGHT/MAZE_H)+1
-        SCALED_RES = MAZE_RES[0]*Interactive.scale, MAZE_RES[1]*Interactive.scale
+        SCALED_RES = (MAZE_RES[0]*Interactive.scale)+1, MAZE_RES[1]*Interactive.scale
         DIMS = RECT_SIZE,MAZE_RES,SCALED_RES#SCALED_RES#RES
-        offsets = WIDTH/2 - Interactive.offset_position[0], HEIGHT/2 - Interactive.offset_position[1]
+        offsets = (WIDTH/2) - ((path[-1][0]*Interactive.scale) + Interactive.offset_position[0]), (HEIGHT/2) - ((path[-1][1]*Interactive.scale) + Interactive.offset_position[1])
+    elif not reset_pos:
+        RECT_SIZE = (1*Interactive.scale, 1*Interactive.scale)#((WIDTH/MAZE_W)+1), (HEIGHT/MAZE_H)+1
+        SCALED_RES = (MAZE_RES[0]*Interactive.scale)+1, MAZE_RES[1]*Interactive.scale
+        DIMS = RECT_SIZE,MAZE_RES,SCALED_RES#SCALED_RES#RES
+        offsets = (WIDTH/2) - Interactive.offset_position[0], (HEIGHT/2) - Interactive.offset_position[1]
     else:
         RECT_SIZE = (WIDTH/MAZE_W)+1, (HEIGHT/MAZE_H)+1
         DIMS = RECT_SIZE,MAZE_RES,RES#SCALED_RES#RES
         offsets = 0, 0
 
-    path, start, end, closed, goals = packed
+    if RECT_SIZE[0] < 1:
+        RECT_SIZE = (1, 1)
+
+    
 
     
     to_draw = _make_rects(path, DIMS, COLORS["WHITE"], offsets) +\
@@ -377,7 +401,7 @@ def __main():
         
         
         
-        _draw(SCREEN, packed, MATRIX, saveframe, reset_pos=False)
+        _draw(SCREEN, packed, MATRIX, saveframe, reset_pos=False, follow=False)
         
         if goals:
             if node in goals: 
