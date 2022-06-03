@@ -30,10 +30,25 @@ similarly, an underscore at the end is used to represent an object that wants a 
 name to an already decalred object or keyword.
 """
 class Interactive:
+
+
     scale = 10
     offset_position = (0, 0)
     start_tracking_pos = (0, 0)
-    tracking = False
+
+    follow = False
+    follow_offset_position = (0, 0)
+    follow_start_tracking_pos = (0, 0)
+
+    @classmethod
+    def restoreDefaults(cls):
+        cls.scale = 10
+        cls.offset_position = (0, 0)
+        cls.start_tracking_pos = (0, 0)
+        cls.follow_offset_position = (0, 0)
+        cls.follow_start_tracking_pos = (0, 0)
+
+
     @classmethod
     def growScale(cls, val):
         cls.scale += val*cls.scale*0.1
@@ -43,11 +58,23 @@ class Interactive:
         print("Offset Position: ", cls.offset_position)
         print("Start Pos: ", cls.start_tracking_pos)
         print()
-        cls.offset_position = _add_vect_2D(_negate_vect_2D(pygame.mouse.get_pos()),  cls.start_tracking_pos)
+        if cls.follow:
+            cls.follow_offset_position = _add_vect_2D(_negate_vect_2D(pygame.mouse.get_pos()),  cls.follow_start_tracking_pos)
+        else:
+            cls.offset_position = _add_vect_2D(_negate_vect_2D(pygame.mouse.get_pos()),  cls.start_tracking_pos)
 
     @classmethod
     def startTrackingPosition(cls):
-        cls.start_tracking_pos = _add_vect_2D(pygame.mouse.get_pos(), cls.offset_position)
+        if cls.follow:
+            cls.follow_offset_position = (0, 0)
+            cls.follow_start_tracking_pos = pygame.mouse.get_pos()
+        else:
+            cls.start_tracking_pos = _add_vect_2D(pygame.mouse.get_pos(), cls.offset_position)
+        
+
+    @classmethod
+    def followToggle(cls):
+        cls.follow = not cls.follow
 
 
 
@@ -185,16 +212,16 @@ def _handle_events():
 
         if event.type == pygame.MOUSEMOTION:
             if pygame.mouse.get_pressed()[0]:
-                # if not Interactive.tracking:
-                    
-                Interactive.tracking = True
-                # print("Dragging")
                 Interactive.setOffset()
 
             elif pygame.mouse.get_rel()[0]:
-                Interactive.tracking = False
-                # print("Released")
                 Interactive.startTrackingPosition()
+
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_f:
+                Interactive.followToggle()
+            elif event.key == pygame.K_k:
+                Interactive.restoreDefaults()
 
                 
 
@@ -210,7 +237,7 @@ def _draw(surface, packed, matrix2D, save_frame_, reset_pos=False, follow=False)
         RECT_SIZE = (1*Interactive.scale, 1*Interactive.scale)#((WIDTH/MAZE_W)+1), (HEIGHT/MAZE_H)+1
         SCALED_RES = (MAZE_RES[0]*Interactive.scale)+1, MAZE_RES[1]*Interactive.scale
         DIMS = RECT_SIZE,MAZE_RES,SCALED_RES#SCALED_RES#RES
-        offsets = (WIDTH/2) - ((path[-1][0]*Interactive.scale) + Interactive.offset_position[0]), (HEIGHT/2) - ((path[-1][1]*Interactive.scale) + Interactive.offset_position[1])
+        offsets = (WIDTH/2) - ((path[-1][0]*Interactive.scale) + Interactive.follow_offset_position[0]), (HEIGHT/2) - ((path[-1][1]*Interactive.scale) + Interactive.follow_offset_position[1])
     elif not reset_pos:
         RECT_SIZE = (1*Interactive.scale, 1*Interactive.scale)#((WIDTH/MAZE_W)+1), (HEIGHT/MAZE_H)+1
         SCALED_RES = (MAZE_RES[0]*Interactive.scale)+1, MAZE_RES[1]*Interactive.scale
@@ -262,7 +289,7 @@ def _make_gif(fp, fps):
     img, *imgs = [Image.open(f) for f in sorted(glob.glob(name), key=lambda x: int("".join(re.findall("[0-9]", x))))]
     print("Saving Gif")
     img.save(fp=fp_out, format='GIF', append_images=imgs,
-            save_all=True, fps=fps, duration=(1/fps), loop=0, optimize=True, palettesize=len(list(COLORS.values())), subrectangles=True)
+            save_all=True, fps=fps, duration=40, optimize=False, loop=1, palettesize=len(list(COLORS.values())), subrectangles=True)
     
     print("Cleaning up.")
     shutil.rmtree(fp_in)
@@ -365,6 +392,7 @@ def is_solvable(matrix):
 
 # secrets
 
+
 def __main():
     args = _establish_cli()
     
@@ -401,7 +429,7 @@ def __main():
         
         
         
-        _draw(SCREEN, packed, MATRIX, saveframe, reset_pos=False, follow=False)
+        _draw(SCREEN, packed, MATRIX, saveframe, reset_pos=False, follow=Interactive.follow)
         
         if goals:
             if node in goals: 
@@ -414,7 +442,9 @@ def __main():
                 _scrnsht(SCREEN, args.scr)
             if args.gif:
                 _make_gif(saveframe, FPS)
-            return path
+
+            print("End Found!")
+            break
         
         for neighbor in adj[str(node)]:
             next_path = list(path)
@@ -426,6 +456,13 @@ def __main():
             visited.append(neighbor)
             
         time.sleep(1/FPS)
+
+    # end screen
+    while True:
+        _draw(SCREEN, packed, MATRIX, saveframe, reset_pos=False, follow=Interactive.follow)
+        _handle_events()
+        time.sleep(1/FPS)
        
 if __name__ == "__main__":
     __main()
+    
